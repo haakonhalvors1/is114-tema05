@@ -1,2 +1,2 @@
-# is114-tema05
+# oblig5-repo
 Kode for OBLIG 5
