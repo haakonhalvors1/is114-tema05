@@ -1,14 +1,54 @@
+import logging
+import pandas as pd
+import altair as alt
 from flask import Flask
 from flask import url_for
 from flask import render_template
 from flask import request
 from flask import redirect
 from flask import session
+from datetime import datetime
 from kgmodel import (Foresatt, Barn, Soknad, Barnehage)
 from kgcontroller import (form_to_object_soknad, insert_soknad, commit_all, select_alle_barnehager)
 
 app = Flask(__name__)
 app.secret_key = 'BAD_SECRET_KEY' # nødvendig for session
+
+# Konfigurer logging
+logging.basicConfig(level=logging.DEBUG)
+
+def beregn_alder(personnummer):
+    try:
+        fødselsdato = datetime.strptime(personnummer[:6], "%d%m%y")
+        dagens_dato = datetime.now()
+        alder = (dagens_dato - fødselsdato).days // 365
+        return alder
+    except Exception as e:
+        logging.error(f"Feil ved beregning av alder: {e}")
+        return 0
+
+
+def vurder_soknad(sd, ledige_plasser, fortrinnsrett=False):
+    """
+    Vurderer søknad basert på kriterier:
+    - Sjekker om barnet er gammelt nok (min. 1 år).
+    - Sjekker om det er ledige plasser eller fortrinnsrett.
+    """
+    try:
+        personnummer = sd.get('personnummer_barnet_1', '')
+        barnets_alder = beregn_alder(personnummer)
+        if barnets_alder < 1:
+            return "AVSLAG: Barnet er under ett år."
+        elif ledige_plasser < 1 and not fortrinnsrett:
+            return "AVSLAG: Ingen ledige plasser."
+        elif ledige_plasser > 0 or fortrinnsrett:
+            return "TILBUD"
+        else:
+            return "AVSLAG"
+    except ValueError:
+        return "AVSLAG: Ugyldig alder."
+
+
 
 @app.route('/')
 def index():
@@ -20,16 +60,67 @@ def barnehager():
     return render_template('barnehager.html', data=information)
 
 @app.route('/behandle', methods=['GET', 'POST'])
-def behandle():
-    if request.method == 'POST':
-        sd = request.form
-        print(sd)
-        log = insert_soknad(form_to_object_soknad(sd))
-        print(log)
-        session['information'] = sd
-        return redirect(url_for('svar')) #[1]
-    else:
-        return render_template('soknad.html')
+def behandle_soknad():
+    try:
+        if request.method == 'GET':
+            return render_template('soknad.html')
+        elif request.method == 'POST':
+            sd = request.form.to_dict()
+            logging.debug(f"Søknadsdata: {sd}")
+
+            # Les barnehagedata
+            barnehager = pd.read_excel('kgdata.xlsx', 'barnehage', index_col=0)
+            logging.debug(f"Barnehagedata:\n{barnehager}")
+
+            # Hent barnehageinformasjon
+            barnehage_navn = sd.get('liste_over_barnehager_prioritert_5', '').strip()
+            if not barnehager.loc[barnehager['barnehage_navn'] == barnehage_navn].empty:
+                ledige_plasser = barnehager.loc[barnehager['barnehage_navn'] == barnehage_navn, 'barnehage_ledige_plasser'].iloc[0]
+            else:
+                ledige_plasser = 0
+            
+            logging.debug(f"Ledige plasser: {ledige_plasser}")
+            
+            # Sjekk fortrinnsrett
+            fortrinnsrett = bool(sd.get('fortrinnsrett_barnevern') or 
+                                 sd.get('fortrinnsrett_sykdom_i_familien') or 
+                                 sd.get('fortrinnsrett_sykdome_paa_barnet'))
+            logging.debug(f"Fortrinnsrett: {fortrinnsrett}")
+
+            # Vurder søknaden
+            resultat = vurder_soknad(sd, ledige_plasser, fortrinnsrett)
+            logging.debug(f"Resultat: {resultat}")
+
+            # Lagre søknaden i Excel-filen
+            try:
+                søknader = pd.read_excel('kgdata.xlsx', 'soknad')
+            except FileNotFoundError:
+                søknader = pd.DataFrame(columns=['navn_forelder_1', 'liste_over_barnehager_prioritert_5', 'beslutning'])
+
+            # Opprett en DataFrame for den nye søknaden
+            ny_søknad = pd.DataFrame([{
+                'navn_forelder_1': sd.get('navn_forelder_1'),
+                'liste_over_barnehager_prioritert_5': sd.get('liste_over_barnehager_prioritert_5'),
+                'beslutning': resultat
+            }])
+
+            # Bruk pd.concat() for å legge til ny søknad
+            søknader = pd.concat([søknader, ny_søknad], ignore_index=True)
+
+            # Lagre tilbake til Excel
+            with pd.ExcelWriter('kgdata.xlsx', mode='a', engine='openpyxl', if_sheet_exists='replace') as writer:
+                søknader.to_excel(writer, sheet_name='soknad', index=False)
+
+            return render_template('svar.html', resultat=resultat, data=sd)
+    except FileNotFoundError:
+        logging.error("Excel-filen 'kgdata.xlsx' finnes ikke.")
+        return "Feil: Excel-filen mangler.", 500
+    except Exception as e:
+        logging.error(f"Uventet feil: {e}")
+        return f"Feil: {e}", 500
+
+
+
 
 @app.route('/svar')
 def svar():
@@ -38,8 +129,113 @@ def svar():
 
 @app.route('/commit')
 def commit():
-    commit_all()
-    return render_template('commit.html')
+    try:
+        # Les alle søknadsdata fra Excel
+        søknader_df = pd.read_excel('kgdata.xlsx', sheet_name='soknad')
+        logging.debug(f"Søknader fra databasen:\n{søknader_df}")
+        
+        # Les alle barnehagedata fra Excel
+        barnehager_df = pd.read_excel('kgdata.xlsx', sheet_name='barnehage')
+        logging.debug(f"Barnehager fra databasen:\n{barnehager_df}")
+
+        # Konverter DataFrames til lister av dictionaries for enklere bruk i Jinja2
+        søknader_liste = søknader_df.to_dict(orient='records')
+        barnehager_liste = barnehager_df.to_dict(orient='records')
+
+        # Send både søknader og barnehager til commit.html
+        return render_template('commit.html', søknader=søknader_liste, barnehager=barnehager_liste)
+    except FileNotFoundError:
+        logging.error("Excel-filen 'kgdata.xlsx' finnes ikke.")
+        return "Feil: Excel-filen mangler.", 500
+    except Exception as e:
+        logging.error(f"Uventet feil i /commit: {e}")
+        return f"Feil: {e}", 500
+
+
+
+@app.route('/soknader')
+def soknader():
+    try:
+        # Les søknadsdata fra Excel
+        søknader_df = pd.read_excel('kgdata.xlsx', 'soknad')
+        logging.debug(f"Søknadsdata:\n{søknader_df}")
+
+        # Konverter DataFrame til en liste av dictionaries for enklere bruk i Jinja2
+        søknader_liste = søknader_df.to_dict(orient='records')
+
+        # Send data til søknader.html
+        return render_template('soknader.html', søknader=søknader_liste)
+    except FileNotFoundError:
+        logging.error("Excel-filen 'kgdata.xlsx' finnes ikke.")
+        return "Feil: Excel-filen mangler.", 500
+    except Exception as e:
+        logging.error(f"Uventet feil i /søknader: {e}")
+        return f"Feil: {e}", 500
+    
+    
+@app.route('/statistikk', methods=['GET', 'POST'])
+def statistikk():
+    try:
+        if request.method == 'POST':
+            kommune = request.form.get('kommune', '').strip().lower()
+            logging.debug(f"Bruker valgte kommunen: {kommune}")
+
+            # Les datasettet
+            df = pd.read_excel("ssb-barnehager-2015-2023-alder-1-2-aar_cleaned.xlsm", sheet_name="VASKET")
+            logging.debug(f"Datasettet er lastet inn med {len(df)} rader.")
+
+            df['kom'] = df['kom'].str.lower()
+
+            # Filtrer data for valgt kommune
+            kom_data = df[df['kom'] == kommune]
+            logging.debug(f"Antall rader for valgt kommune ({kommune}): {len(kom_data)}")
+
+            if not kom_data.empty:
+                # Omorganiser data for Altair
+                kom_data_melted = kom_data.melt(
+                    id_vars='kom',
+                    value_vars=['y15', 'y16', 'y17', 'y18', 'y19', 'y20', 'y21', 'y22', 'y23'],
+                    var_name='År', value_name='Prosent'
+                )
+                kom_data_melted['År'] = kom_data_melted['År'].str.replace('y', '20').astype(int)
+
+                # Fjern rader med NaN i 'Prosent'-kolonnen
+                kom_data_melted = kom_data_melted.dropna(subset=['Prosent'])
+                logging.debug(f"Omorganisert data (etter fjerning av NaN):\n{kom_data_melted}")
+
+                # Lag graf med Altair
+                chart = alt.Chart(kom_data_melted).mark_line(point=True).encode(
+                    x=alt.X('År:O', title='År'),
+                    y=alt.Y('Prosent:Q', title='Prosent (%)', scale=alt.Scale(domain=[0, 100])),
+                    tooltip=['År:O', 'Prosent:Q']
+                ).properties(
+                    title=f'Prosent av barn i barnehagen (1-2 år) i {kommune.capitalize()}',
+                    width=800,
+                    height=400
+                ).configure_title(
+                    fontSize=16, anchor='start'
+                )
+
+                # Lagre graf som HTML
+                chart_path = 'static/prosent_barn_i_barnehagen.html'
+                chart.save(chart_path)
+                logging.debug(f"Grafen er lagret som: {chart_path}")
+
+                return render_template('statistikk_resultat.html', kommune=kommune.capitalize(), chart_path=chart_path)
+            else:
+                logging.error(f"Kommune '{kommune}' finnes ikke i datasettet.")
+                return render_template('statistikk.html', error=f"Kommune '{kommune.capitalize()}' finnes ikke i datasettet.")
+        else:
+            return render_template('statistikk.html')
+    except FileNotFoundError as e:
+        logging.error(f"Filen finnes ikke: {e}")
+        return "Feil: Datasettet mangler på serveren.", 500
+    except Exception as e:
+        logging.error(f"Uventet feil: {e}")
+        return f"Feil: {e}", 500
+
+
+
 
 
 

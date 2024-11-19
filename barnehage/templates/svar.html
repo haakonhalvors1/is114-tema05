@@ -1,12 +1,29 @@
 {% extends 'base.html' %}
-<!-- Skriv inn din kode her for å returnere svar for bruksscenario om svar på en søknad. --> 
+
 {% block content %}
-<table border=1>
-	{% for k,v in data.items() %}
-	<tr>
-		<th>{{ k }}</th>
-		<td>{{ v }}</td>
-	</tr>
-	{% endfor %}
+<h1>Svar på din søknad</h1>
+
+<!-- Viser resultatet av vurderingen -->
+<h2>Resultat: {{ resultat }}</h2>
+
+<!-- Viser detaljer fra søknaden -->
+<table border="1">
+    <thead>
+        <tr>
+            <th>Felt</th>
+            <th>Verdi</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for key, value in data.items() %}
+        <tr>
+            <td>{{ key }}</td>
+            <td>{{ value }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>
+
+<!-- Tilbake til startsiden -->
+<a href="{{ url_for('index') }}">Tilbake til start</a>
 {% endblock %}

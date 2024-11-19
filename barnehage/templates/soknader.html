@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Søknader</title>
+</head>
+<body>
+    <h1>Søknader</h1>
+    <table border="1" style="width:100%; text-align:left;">
+        <thead>
+            <tr>
+                <th>Navn på Søker</th>
+                <th>Barnehage</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for søknad in søknader %}
+            <tr>
+                <td>{{ søknad['navn_forelder_1'] }}</td>
+                <td>{{ søknad['liste_over_barnehager_prioritert_5'] }}</td>
+                <td>{{ søknad['beslutning'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <a href="{{ url_for('index') }}">Tilbake til Hjem</a>
+</body>
+</html>

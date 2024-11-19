@@ -84,8 +84,10 @@
     <nav>
         <span>MENY:</span>
         <a href="{{ url_for('index') }}">Hjem</a>
-        <a href="{{ url_for('behandle') }}">Søk</a>
+        <a href="{{ url_for('behandle_soknad') }}">Søk</a>
         <a href="{{ url_for('barnehager') }}">Barnehager</a>
+		<a href="{{ url_for('soknader') }}">Søknader</a>
+		<a href="{{ url_for('statistikk') }}">Statistikk</a>
 
         <a href="{{ url_for('commit') }}" style="float: right;"> commit</a>
         <span style="float: right">ADMIN:</span>

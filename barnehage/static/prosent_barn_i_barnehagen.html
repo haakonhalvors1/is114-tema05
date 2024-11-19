@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    #vis.vega-embed {
+      width: 100%;
+      display: flex;
+    }
+
+    #vis.vega-embed details,
+    #vis.vega-embed details summary {
+      position: relative;
+    }
+  </style>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@5.20.1"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+</head>
+<body>
+  <div id="vis"></div>
+  <script>
+    (function(vegaEmbed) {
+      var spec = {"config": {"view": {"continuousWidth": 300, "continuousHeight": 300}, "title": {"anchor": "start", "fontSize": 16}}, "data": {"name": "data-9be3fb1edff606574cfbfb7c35550045"}, "mark": {"type": "line", "point": true}, "encoding": {"tooltip": [{"field": "\u00c5r", "type": "ordinal"}, {"field": "Prosent", "type": "quantitative"}], "x": {"field": "\u00c5r", "title": "\u00c5r", "type": "ordinal"}, "y": {"field": "Prosent", "scale": {"domain": [0, 100]}, "title": "Prosent (%)", "type": "quantitative"}}, "height": 400, "title": "Prosent av barn i barnehagen (1-2 \u00e5r) i Bergen", "width": 800, "$schema": "https://vega.github.io/schema/vega-lite/v5.20.1.json", "datasets": {"data-9be3fb1edff606574cfbfb7c35550045": [{"kom": "bergen", "\u00c5r": 2015, "Prosent": 84.6}, {"kom": "bergen", "\u00c5r": 2016, "Prosent": 85.8}, {"kom": "bergen", "\u00c5r": 2017, "Prosent": 86.4}, {"kom": "bergen", "\u00c5r": 2018, "Prosent": 88.3}, {"kom": "bergen", "\u00c5r": 2019, "Prosent": 87.7}, {"kom": "bergen", "\u00c5r": 2020, "Prosent": 88.8}, {"kom": "bergen", "\u00c5r": 2021, "Prosent": 91.4}, {"kom": "bergen", "\u00c5r": 2022, "Prosent": 91.6}, {"kom": "bergen", "\u00c5r": 2023, "Prosent": 93.2}]}};
+      var embedOpt = {"mode": "vega-lite"};
+
+      function showError(el, error){
+          el.innerHTML = ('<div style="color:red;">'
+                          + '<p>JavaScript Error: ' + error.message + '</p>'
+                          + "<p>This usually means there's a typo in your chart specification. "
+                          + "See the javascript console for the full traceback.</p>"
+                          + '</div>');
+          throw error;
+      }
+      const el = document.getElementById('vis');
+      vegaEmbed("#vis", spec, embedOpt)
+        .catch(error => showError(el, error));
+    })(vegaEmbed);
+
+  </script>
+</body>
+</html>

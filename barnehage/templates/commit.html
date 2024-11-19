@@ -1,5 +1,68 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Alle Lagrede Data</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Alle Lagrede Søknader</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Navn på Søker</th>
+                <th>Barnehage</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for soknad in søknader %}
+            <tr>
+                <td>{{ soknad['navn_forelder_1'] }}</td>
+                <td>{{ soknad['liste_over_barnehager_prioritert_5'] }}</td>
+                <td>{{ soknad['beslutning'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-{% block content %}
-<p>Alle endringene er skrevet til dbexcel!</p>
-{% endblock %}
+    <h1>Oversikt over Barnehager</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Barnehage Navn</th>
+                <th>Ledige Plasser</th>
+                <th>Totalt Antall Plasser</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for barnehage in barnehager %}
+            <tr>
+                <td>{{ barnehage['barnehage_navn'] }}</td>
+                <td>{{ barnehage['barnehage_ledige_plasser'] }}</td>
+                <td>{{ barnehage['barnehage_antall_plasser'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+    <a href="{{ url_for('index') }}">Tilbake til Hjem</a>
+</body>
+</html>

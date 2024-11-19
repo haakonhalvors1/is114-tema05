@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Statistikk Resultat</title>
+</head>
+<body>
+    <h1>Statistikk for {{ kommune }}</h1>
+    <iframe src="{{ url_for('static', filename='prosent_barn_i_barnehagen.html') }}" width="850" height="450"></iframe>
+    <br>
+    <a href="{{ url_for('statistikk') }}">Tilbake til kommunevalg</a>
+</body>
+</html>
