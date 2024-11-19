@@ -3,13 +3,13 @@ import pandas as pd
 from kgmodel import Barnehage
 
 def initiate_db(db_name):
-    kg1 = Barnehage(1,"Sunshine Preschool",50,15)
-    kg2 = Barnehage(2,"Happy Days Nursery",25,2)
-    kg3 = Barnehage(3,"123 Learning Center",35,4)
-    kg4 = Barnehage(4,"ABC Kindergarten",12,0)
-    kg5 = Barnehage(5,"Tiny Tots Academy",15,5)
-    kg6 = Barnehage(6,"Giggles and Grins Childcare",10,0)
-    kg7 = Barnehage(7,"Playful Pals Daycare",40,6)
+    kg1 = Barnehage(1,"Amicus barnehage",50,15)
+    kg2 = Barnehage(2,"Aronsløkka barnehage",25,2)
+    kg3 = Barnehage(3,"Bacheparken barnehage",35,4)
+    kg4 = Barnehage(4,"Blåbærtoppen barnehage",12,0)
+    kg5 = Barnehage(5,"Dalegårdsveien barnehage",15,5)
+    kg6 = Barnehage(6,"Ekornheia barnehage",20,0)
+    kg7 = Barnehage(7,"Eplehagan barnehage",40,6)
     
     barnehage_liste = [kg1, kg2, kg3, kg4, kg5, kg6, kg7]
     
