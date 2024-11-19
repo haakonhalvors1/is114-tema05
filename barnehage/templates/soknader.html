@@ -3,15 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <title>Søknader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 10px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+        }
+        td {
+            padding: 8px;
+            font-size: 12px;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+        tr:hover {
+            background-color: #e6e6e6;
+        }
+        .center {
+            text-align: center;
+        }
+        .btn-back, .btn-clear {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 12px;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .btn-back {
+            background-color: #4CAF50;
+        }
+        .btn-back:hover {
+            background-color: #45a049;
+        }
+        .btn-clear {
+            background-color: red;
+        }
+        .btn-clear:hover {
+            background-color: darkred;
+        }
+    </style>
 </head>
 <body>
     <h1>Søknader</h1>
-    <table border="1" style="width:100%; text-align:left;">
+    <table>
         <thead>
             <tr>
                 <th>Navn på Søker</th>
                 <th>Barnehage</th>
                 <th>Status</th>
+                <th>Fortrinnsrett</th>
+                <th>Ledige Plasser</th>
             </tr>
         </thead>
         <tbody>
@@ -19,12 +84,28 @@
             <tr>
                 <td>{{ søknad['navn_forelder_1'] }}</td>
                 <td>{{ søknad['liste_over_barnehager_prioritert_5'] }}</td>
-                <td>{{ søknad['beslutning'] }}</td>
+                <td class="center">{{ søknad['beslutning'] }}</td>
+                <td>
+                    <ul style="list-style-type: none; margin: 0; padding: 0; font-size: 11px;">
+                        <li>Barnevern: {{ søknad['fr_barnevern'] }}</li>
+                        <li>Sykdom i familien: {{ søknad['fr_sykd_familie'] }}</li>
+                        <li>Sykdom på barnet: {{ søknad['fr_sykd_barn'] }}</li>
+                        <li>Annet: {{ søknad['fr_annet'] }}</li>
+                    </ul>
+                </td>
+                <td class="center">{{ søknad['ledige_plasser'] }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    <br>
-    <a href="{{ url_for('index') }}">Tilbake til Hjem</a>
+
+    <div class="center">
+        <form action="{{ url_for('tøm_søknader_rute') }}" method="post" style="display: inline-block;">
+            <button type="submit" class="btn-clear" onclick="return confirm('Er du sikker på at du vil tømme alle søknader?');">
+                Tøm alle søknader
+            </button>
+        </form>
+        <a href="{{ url_for('index') }}" class="btn-back">Tilbake til Hjem</a>
+    </div>
 </body>
 </html>

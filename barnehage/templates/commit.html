@@ -4,20 +4,48 @@
     <meta charset="UTF-8">
     <title>Alle Lagrede Data</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
         }
         table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
+            border: 1px solid #ddd;
         }
         th {
-            background-color: #f2f2f2;
+            background-color: #f4f4f4;
+            font-weight: bold;
+            text-align: center;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+        .btn-back {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .btn-back:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
@@ -29,14 +57,25 @@
                 <th>Navn på Søker</th>
                 <th>Barnehage</th>
                 <th>Status</th>
+                <th>Fortrinnsrett</th>
+                <th>Ledige Plasser</th>
             </tr>
         </thead>
         <tbody>
-            {% for soknad in søknader %}
+            {% for søknad in søknader %}
             <tr>
-                <td>{{ soknad['navn_forelder_1'] }}</td>
-                <td>{{ soknad['liste_over_barnehager_prioritert_5'] }}</td>
-                <td>{{ soknad['beslutning'] }}</td>
+                <td>{{ søknad['navn_forelder_1'] }}</td>
+                <td>{{ søknad['liste_over_barnehager_prioritert_5'] }}</td>
+                <td>{{ søknad['beslutning'] }}</td>
+                <td>
+                    <ul style="list-style-type: none; margin: 0; padding: 0;">
+                        <li>Barnevern: {{ søknad['fr_barnevern'] }}</li>
+                        <li>Sykdom i familien: {{ søknad['fr_sykd_familie'] }}</li>
+                        <li>Sykdom på barnet: {{ søknad['fr_sykd_barn'] }}</li>
+                        <li>Annet: {{ søknad['fr_annet'] }}</li>
+                    </ul>
+                </td>
+                <td>{{ søknad['ledige_plasser'] }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -62,7 +101,8 @@
         </tbody>
     </table>
 
-    <br>
-    <a href="{{ url_for('index') }}">Tilbake til Hjem</a>
+    <div style="text-align: center;">
+        <a href="{{ url_for('index') }}" class="btn-back">Tilbake til Hjem</a>
+    </div>
 </body>
 </html>

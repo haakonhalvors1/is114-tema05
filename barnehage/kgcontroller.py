@@ -203,3 +203,27 @@ def test_df_to_object_list():
                              r['barnehage_antall_plasser'],
                              r['barnehage_ledige_plasser']),
          axis=1).to_list()[0].barnehage_navn == "Sunshine Preschool"
+    
+def tøm_søknader():
+    """
+    Tømmer listen over søknader ved å overskrive soknad-arket med en tom DataFrame.
+    """
+    try:
+        # Overskriv arket med en tom DataFrame
+        tom_df = pd.DataFrame(columns=[
+            'navn_forelder_1', 
+            'liste_over_barnehager_prioritert_5', 
+            'beslutning',
+            'fr_barnevern',
+            'fr_sykd_familie',
+            'fr_sykd_barn',
+            'fr_annet',
+            'ledige_plasser'
+        ])
+        with pd.ExcelWriter('kgdata.xlsx', mode='a', engine='openpyxl', if_sheet_exists='replace') as writer:
+            tom_df.to_excel(writer, sheet_name='soknad', index=False)
+        print("Søknader er tømt.")
+    except FileNotFoundError:
+        print("Excel-filen 'kgdata.xlsx' finnes ikke.")
+    except Exception as e:
+        print(f"En feil oppstod under tømming av søknader: {e}")
